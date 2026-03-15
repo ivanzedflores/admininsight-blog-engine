@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BlogPost } from "./types";
+import { BlogPost, Feedback } from "./types";
 import { BlogCard } from "./components/BlogCard";
 import { ArticleView } from "./components/ArticleView";
 import { AdminPanel } from "./components/AdminPanel";
@@ -89,6 +89,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [user, setUser] = useState<User | null>(null);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -134,6 +135,15 @@ export default function App() {
   const handlePostCreated = (newPost: BlogPost) => {
     setPosts([newPost, ...posts]);
     setActiveTab("feed");
+  };
+
+  const handleFeedbackSubmit = (feedbackData: Omit<Feedback, "id" | "date">) => {
+    const newFeedback: Feedback = {
+      ...feedbackData,
+      id: Math.random().toString(36).substr(2, 9),
+      date: new Date().toISOString(),
+    };
+    setFeedbacks((prev) => [...prev, newFeedback]);
   };
 
   return (
@@ -222,7 +232,13 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-6 py-12">
         <AnimatePresence mode="wait">
           {selectedPost ? (
-            <ArticleView key="article" post={selectedPost} onBack={() => setSelectedPost(null)} />
+            <ArticleView 
+              key="article" 
+              post={selectedPost} 
+              onBack={() => setSelectedPost(null)} 
+              feedbacks={feedbacks.filter(f => f.postId === selectedPost.id)}
+              onFeedbackSubmit={handleFeedbackSubmit}
+            />
           ) : activeTab === "feed" ? (
             <motion.div
               key="feed"
@@ -286,7 +302,7 @@ export default function App() {
                 <h2 className="text-3xl font-medium tracking-tight mb-2 text-zinc-100">Admin Dashboard</h2>
                 <p className="text-zinc-500 text-sm">Manage your content and analyze community feedback.</p>
               </div>
-              <AdminPanel onPostCreated={handlePostCreated} />
+              <AdminPanel onPostCreated={handlePostCreated} feedbacks={feedbacks} />
             </motion.div>
           )}
         </AnimatePresence>

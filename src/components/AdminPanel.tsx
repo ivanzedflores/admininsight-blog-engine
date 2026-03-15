@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { aiService } from "../services/ai";
-import { BlogPost } from "../types";
+import { BlogPost, Feedback } from "../types";
 import { Sparkles, Loader2, Plus, RefreshCw, BarChart3, MessageSquare } from "lucide-react";
 import { cn } from "../utils/cn";
 import { motion, AnimatePresence } from "motion/react";
 
 interface AdminPanelProps {
   onPostCreated: (post: BlogPost) => void;
+  feedbacks: Feedback[];
 }
 
-export function AdminPanel({ onPostCreated }: AdminPanelProps) {
+export function AdminPanel({ onPostCreated, feedbacks }: AdminPanelProps) {
   const [topic, setTopic] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -42,12 +43,12 @@ export function AdminPanel({ onPostCreated }: AdminPanelProps) {
   const handleAnalyzeFeedback = async () => {
     setIsAnalyzing(true);
     try {
-      // Mock feedbacks for now
-      const mockFeedbacks = [
-        { id: "1", postId: "1", rating: 5, tags: ["Helpful"], comment: "Great post!", date: new Date().toISOString() },
-        { id: "2", postId: "1", rating: 3, tags: ["Needs Clarity"], comment: "A bit too technical.", date: new Date().toISOString() },
-      ];
-      const result = await aiService.analyzeFeedback(mockFeedbacks);
+      if (feedbacks.length === 0) {
+        setAnalysis("No community feedback has been submitted yet.");
+        setIsAnalyzing(false);
+        return;
+      }
+      const result = await aiService.analyzeFeedback(feedbacks);
       setAnalysis(result);
     } catch (error) {
       console.error("Analysis failed", error);

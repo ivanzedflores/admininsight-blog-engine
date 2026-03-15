@@ -3,13 +3,16 @@ import { Star, ThumbsUp, MessageSquare, Send, CheckCircle2 } from "lucide-react"
 import { cn } from "../utils/cn";
 import { motion, AnimatePresence } from "motion/react";
 
+import { Feedback } from "../types";
+
 interface FeedbackSectionProps {
   postId: string;
+  onFeedbackSubmit: (feedback: Omit<Feedback, "id" | "date">) => void;
 }
 
 const FEEDBACK_TAGS = ["Helpful", "Insightful", "Needs Clarity", "Too Technical", "Great Examples"];
 
-export function FeedbackSection({ postId }: FeedbackSectionProps) {
+export function FeedbackSection({ postId, onFeedbackSubmit }: FeedbackSectionProps) {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -24,8 +27,13 @@ export function FeedbackSection({ postId }: FeedbackSectionProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, send to backend
-    console.log("Feedback submitted:", { postId, rating, selectedTags, comment });
+    onFeedbackSubmit({
+      postId,
+      rating,
+      tags: selectedTags,
+      comment
+    });
+    
     setIsSubmitted(true);
     setTimeout(() => setIsSubmitted(false), 3000);
     

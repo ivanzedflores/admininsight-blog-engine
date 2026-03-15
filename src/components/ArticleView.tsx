@@ -1,16 +1,18 @@
 import Markdown from "react-markdown";
-import { BlogPost } from "../types";
+import { BlogPost, Feedback } from "../types";
 import { format } from "date-fns";
-import { ArrowLeft, Clock, Share2, Bookmark } from "lucide-react";
+import { ArrowLeft, Clock, Share2, Bookmark, User as UserIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { FeedbackSection } from "./FeedbackSection";
 
 interface ArticleViewProps {
   post: BlogPost;
   onBack: () => void;
+  feedbacks: Feedback[];
+  onFeedbackSubmit: (feedback: Omit<Feedback, "id" | "date">) => void;
 }
 
-export function ArticleView({ post, onBack }: ArticleViewProps) {
+export function ArticleView({ post, onBack, feedbacks, onFeedbackSubmit }: ArticleViewProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -80,8 +82,44 @@ export function ArticleView({ post, onBack }: ArticleViewProps) {
       </article>
 
       <div className="border-t border-white/10 pt-12">
-        <FeedbackSection postId={post.id} />
+        <FeedbackSection postId={post.id} onFeedbackSubmit={onFeedbackSubmit} />
       </div>
+
+      {feedbacks.some(f => f.comment.trim() !== '') && (
+        <div className="mt-16 pt-12 border-t border-white/5">
+          <h3 className="text-xl font-medium tracking-tight text-zinc-100 mb-8">Community Comments</h3>
+          <div className="space-y-6">
+            {feedbacks.filter(f => f.comment.trim() !== '').map((feedback) => (
+              <div key={feedback.id} className="bg-white/5 rounded-2xl p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <UserIcon className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-zinc-200">Reader</div>
+                      <div className="text-xs text-zinc-500">{format(new Date(feedback.date), "MMM d, yyyy")}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">
+                    ★ {feedback.rating}/5
+                  </div>
+                </div>
+                <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{feedback.comment}</p>
+                {feedback.tags.length > 0 && (
+                  <div className="flex gap-2 mt-4 flex-wrap">
+                    {feedback.tags.map(tag => (
+                      <span key={tag} className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500 border border-white/10 px-2 py-0.5 rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
