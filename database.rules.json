@@ -1,0 +1,33 @@
+{
+  "rules": {
+    "posts": {
+      // Any user can read the posts on the blog
+      ".read": true,
+      // Only authenticated admins/users can write posts
+      ".write": "auth != null",
+      "$postId": {
+        // Enforce structure on posts
+        ".validate": "newData.hasChildren(['title', 'content', 'author', 'createdAt'])",
+        "title": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "content": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "author": {
+          ".validate": "newData.isString()"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber()"
+        }
+      }
+    },
+    "users": {
+        // Basic user profiles: user can read/write their own profile
+        "$uid": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        }
+    }
+  }
+}
