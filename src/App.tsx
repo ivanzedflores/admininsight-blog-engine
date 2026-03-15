@@ -3,6 +3,7 @@ import { BlogPost, Feedback } from "./types";
 import { BlogCard } from "./components/BlogCard";
 import { ArticleView } from "./components/ArticleView";
 import { AdminPanel } from "./components/AdminPanel";
+import { NotificationsDropdown, AppNotification } from "./components/NotificationsDropdown";
 import { cn } from "./utils/cn";
 import { motion, AnimatePresence } from "motion/react";
 import { LayoutGrid, BookOpen, Settings, Sparkles, Search, Bell, LogIn, LogOut } from "lucide-react";
@@ -90,6 +91,8 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [user, setUser] = useState<User | null>(null);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -135,6 +138,14 @@ export default function App() {
   const handlePostCreated = (newPost: BlogPost) => {
     setPosts([newPost, ...posts]);
     setActiveTab("feed");
+    
+    setNotifications(prev => [{
+      id: Math.random().toString(36).substr(2, 9),
+      message: `New post generated: ${newPost.title}`,
+      date: new Date().toISOString(),
+      read: false,
+      type: "post"
+    }, ...prev]);
   };
 
   const handleFeedbackSubmit = (feedbackData: Omit<Feedback, "id" | "date">) => {
@@ -144,6 +155,19 @@ export default function App() {
       date: new Date().toISOString(),
     };
     setFeedbacks((prev) => [...prev, newFeedback]);
+    
+    const postTitle = posts.find(p => p.id === feedbackData.postId)?.title || "an article";
+    setNotifications(prev => [{
+      id: Math.random().toString(36).substr(2, 9),
+      message: `New feedback received on "${postTitle}"`,
+      date: new Date().toISOString(),
+      read: false,
+      type: "feedback"
+    }, ...prev]);
+  };
+
+  const handleMarkAllNotificationsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
   return (
@@ -196,10 +220,14 @@ export default function App() {
                 className="bg-white/5 border border-transparent rounded-full pl-10 pr-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all w-64 text-zinc-100"
               />
             </div>
-            <button className="p-2 hover:bg-white/5 rounded-full transition-colors relative">
-              <Bell className="w-5 h-5 text-zinc-400" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full border-2 border-zinc-900" />
-            </button>
+            
+            <NotificationsDropdown 
+              notifications={notifications}
+              isOpen={isNotificationsOpen}
+              onClose={() => setIsNotificationsOpen(false)}
+              onToggleOpen={() => setIsNotificationsOpen(!isNotificationsOpen)}
+              onMarkAllRead={handleMarkAllNotificationsRead}
+            />
             
             {user ? (
               <div className="flex items-center gap-3">
