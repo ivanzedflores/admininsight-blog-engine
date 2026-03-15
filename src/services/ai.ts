@@ -39,7 +39,9 @@ export class AIService {
     });
 
     try {
-      return JSON.parse(response.text || "{}");
+      const rawText = response.text || "{}";
+      const cleanText = rawText.replace(/```(?:json)?\n?/g, "").replace(/```\n?/g, "").trim();
+      return JSON.parse(cleanText);
     } catch (e) {
       console.error("Failed to parse AI response", e);
       return {};

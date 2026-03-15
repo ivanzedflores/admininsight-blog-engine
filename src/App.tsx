@@ -87,6 +87,7 @@ export default function App() {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [activeTab, setActiveTab] = useState<"feed" | "admin">("feed");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -101,6 +102,9 @@ export default function App() {
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: "select_account"
+    });
     try {
       await signInWithPopup(auth, provider);
     } catch (error) {
@@ -118,9 +122,13 @@ export default function App() {
   };
 
   const filteredPosts = posts.filter(
-    (post) =>
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    (post) => {
+      const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            post.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesCategory = selectedCategory === "All" || 
+                              post.tags.some((tag) => tag.toLowerCase() === selectedCategory.toLowerCase());
+      return matchesSearch && matchesCategory;
+    }
   );
 
   const handlePostCreated = (newPost: BlogPost) => {
@@ -238,7 +246,13 @@ export default function App() {
                   {["All", "AI", "Workflows", "Productivity"].map((filter) => (
                     <button
                       key={filter}
-                      className="px-4 py-2 rounded-full text-xs font-medium bg-zinc-900 border border-white/5 hover:border-white/20 transition-all text-zinc-400 hover:text-zinc-100"
+                      onClick={() => setSelectedCategory(filter)}
+                      className={cn(
+                        "px-4 py-2 rounded-full text-xs font-medium border transition-all",
+                        selectedCategory === filter 
+                          ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300" 
+                          : "bg-zinc-900 border-white/5 hover:border-white/20 text-zinc-400 hover:text-zinc-100"
+                      )}
                     >
                       {filter}
                     </button>
